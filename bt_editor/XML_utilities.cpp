@@ -132,7 +132,7 @@ NodeModels ReadTreeNodesModel(const QDomElement &root)
 
 
 
-void RecursivelyCreateXml(const FlowScene &scene, QDomDocument &doc, QDomElement& parent_element, const Node *node)
+void RecursivelyCreateXml(const FlowScene &scene, QDomDocument &doc, QDomElement& parent_element, const Node *node, bool simple)
 {
 
     const QtNodes::NodeDataModel* node_model = node->nodeDataModel();
@@ -143,7 +143,7 @@ void RecursivelyCreateXml(const FlowScene &scene, QDomDocument &doc, QDomElement
     QString registration_name = bt_node->registrationName();
     QDomElement element;
 
-    if( BuiltinNodeModels().count(registration_name) != 0)
+    if( BuiltinNodeModels().count(registration_name) != 0 || simple)
     {
         element = doc.createElement( registration_name.toStdString().c_str() );
     }
@@ -177,7 +177,7 @@ void RecursivelyCreateXml(const FlowScene &scene, QDomDocument &doc, QDomElement
         auto node_children = getChildren(scene, *node, true );
         for(const QtNodes::Node* child : node_children)
         {
-            RecursivelyCreateXml(scene, doc, element, child );
+            RecursivelyCreateXml(scene, doc, element, child, simple );
         }
     }
 }

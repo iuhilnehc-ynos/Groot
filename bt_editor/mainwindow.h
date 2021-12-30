@@ -47,7 +47,7 @@ public:
 
     void loadFromXML(const QString &xml_text);
 
-    QString saveToXML() const ;
+    QString saveToXML(bool simple = false) const ;
 
     GraphicContainer* currentTabInfo();
 
@@ -197,7 +197,7 @@ private:
 #ifdef ZMQ_FOUND
     SidepanelMonitor* _monitor_widget;
 #endif
-    
+
     MainWindow::SavedState saveCurrentState();
     void clearUndoStacks();
 };

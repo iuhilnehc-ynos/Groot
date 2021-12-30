@@ -151,7 +151,7 @@ MainWindow::MainWindow(GraphicMode initial_mode, QWidget *parent) :
     {
         if (prev_ID == new_ID)
             return;
-            
+
         for (int index = 0; index < ui->tabWidget->count(); index++)
         {
             if( ui->tabWidget->tabText(index) == prev_ID)
@@ -436,7 +436,7 @@ void MainWindow::on_actionLoad_triggered()
     loadFromXML(xml_text);
 }
 
-QString MainWindow::saveToXML() const
+QString MainWindow::saveToXML(bool simple) const
 {
     QDomDocument doc;
 
@@ -466,48 +466,52 @@ QString MainWindow::saveToXML() const
 
         QtNodes::Node* root_node = abs_root->graphic_node;
 
-        root.appendChild( doc.createComment(COMMENT_SEPARATOR) );
+        if (!simple) {
+          root.appendChild( doc.createComment(COMMENT_SEPARATOR) );
+        }
         QDomElement root_element = doc.createElement("BehaviorTree");
 
         root_element.setAttribute("ID", it.first.toStdString().c_str());
         root.appendChild(root_element);
 
-        RecursivelyCreateXml(*scene, doc, root_element, root_node );
+        RecursivelyCreateXml(*scene, doc, root_element, root_node, simple );
     }
-    root.appendChild( doc.createComment(COMMENT_SEPARATOR) );
 
-    QDomElement root_models = doc.createElement("TreeNodesModel");
+    if (!simple) {
+      root.appendChild( doc.createComment(COMMENT_SEPARATOR) );
 
-    for(const auto& tree_it: _treenode_models)
-    {
-        const auto& ID    = tree_it.first;
-        const auto& model = tree_it.second;
+      QDomElement root_models = doc.createElement("TreeNodesModel");
 
-        if( BuiltinNodeModels().count(ID) != 0 )
-        {
-            continue;
-        }
+      for(const auto& tree_it: _treenode_models)
+      {
+          const auto& ID    = tree_it.first;
+          const auto& model = tree_it.second;
 
-        QDomElement node = doc.createElement( QString::fromStdString(toStr(model.type)) );
+          if( BuiltinNodeModels().count(ID) != 0 )
+          {
+              continue;
+          }
 
-        if( !node.isNull() )
-        {
-            node.setAttribute("ID", ID);
+          QDomElement node = doc.createElement( QString::fromStdString(toStr(model.type)) );
 
-            for(const auto& port_it: model.ports)
-            {
-                const auto& port_name = port_it.first;
-                const auto& port = port_it.second;
+          if( !node.isNull() )
+          {
+              node.setAttribute("ID", ID);
 
-                QDomElement port_element = writePortModel(port_name, port, doc);
-                node.appendChild( port_element );
-            }
-        }
-        root_models.appendChild(node);
+              for(const auto& port_it: model.ports)
+              {
+                  const auto& port_name = port_it.first;
+                  const auto& port = port_it.second;
+
+                  QDomElement port_element = writePortModel(port_name, port, doc);
+                  node.appendChild( port_element );
+              }
+          }
+          root_models.appendChild(node);
+      }
+      root.appendChild(root_models);
+      root.appendChild( doc.createComment(COMMENT_SEPARATOR) );
     }
-    root.appendChild(root_models);
-    root.appendChild( doc.createComment(COMMENT_SEPARATOR) );
-
     return xmlDocumentToString(doc);
 }
 
@@ -642,7 +646,7 @@ void MainWindow::on_actionSave_triggered()
         fileName += ".xml";
     }
 
-    QString xml_text = saveToXML();
+    QString xml_text = saveToXML(true);
 
     QFile file(fileName);
     if (file.open(QIODevice::WriteOnly)) {
